@@ -2,29 +2,41 @@ import 'dart:convert';
 
 import 'package:http/http.dart';
 
-import '../../../core/config/api_constants.dart';
 import '../models/patient_model.dart';
 
 class PatientRepository {
-  final Client client = Client();
+  final client = Client();
 
   Future<List<PatientModel>> getPatients({String search = ""}) async {
-    final response = await client.post(
-      Uri.parse(ApiConstants.searchPatients),
+    try {
+      final response = await client.get(
+        Uri.parse("http://192.168.1.33:8000/patients"),
+      );
 
-      headers: {"Content-Type": "application/json"},
+      print(response.statusCode);
+      print(response.body);
 
-      body: jsonEncode({"search": search}),
-    );
+      if (response.statusCode != 200) {
+        return [];
+      }
 
-    if (response.statusCode != 200) {
-      throw Exception("Failed to load patients");
+      final data = jsonDecode(response.body);
+
+      final patients = (data as List)
+          .map((e) => PatientModel.fromJson(e))
+          .toList();
+
+      if (search.isEmpty) {
+        return patients;
+      }
+
+      return patients.where((patient) {
+        return patient.name.toLowerCase().contains(search.toLowerCase());
+      }).toList();
+    } catch (e) {
+      print(e);
+
+      return [];
     }
-
-    final data = jsonDecode(response.body);
-
-    return (data["patients"] as List)
-        .map((e) => PatientModel.fromJson(e))
-        .toList();
   }
 }

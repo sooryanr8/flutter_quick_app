@@ -6,39 +6,78 @@ import '../bloc/patient_state.dart';
 import '../repository/patient_repository.dart';
 
 class PatientScreen extends StatelessWidget {
-  PatientScreen({super.key});
-
-  final bloc = PatientBloc(PatientRepository());
+  const PatientScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => bloc..load(),
+      create: (_) => PatientBloc(PatientRepository())..load(),
 
-      child: Scaffold(
-        appBar: AppBar(title: const Text("Patients")),
+      child: const _PatientView(),
+    );
+  }
+}
 
-        body: BlocBuilder<PatientBloc, PatientState>(
-          builder: (context, state) {
-            if (state is PatientLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+class _PatientView extends StatelessWidget {
+  const _PatientView();
 
-            if (state is PatientLoaded) {
-              return ListView.builder(
-                itemCount: state.patients.length,
+  @override
+  Widget build(BuildContext context) {
+    final bloc = context.read<PatientBloc>();
 
-                itemBuilder: (context, index) {
-                  final p = state.patients[index];
+    return Scaffold(
+      appBar: AppBar(title: const Text("Patient App")),
 
-                  return ListTile(title: Text(p.name), subtitle: Text(p.id));
-                },
-              );
-            }
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
 
-            return const Center(child: Text("No Data"));
-          },
-        ),
+            child: TextField(
+              onChanged: (value) {
+                bloc.search(value);
+              },
+
+              decoration: const InputDecoration(
+                hintText: "Search patient...",
+
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: BlocBuilder<PatientBloc, PatientState>(
+              builder: (context, state) {
+                print(state.runtimeType);
+
+                if (state is PatientLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state is PatientLoaded) {
+                  if (state.patients.isEmpty) {
+                    return const Center(
+                      child: Text("There are no patients to show"),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: state.patients.length,
+
+                    itemBuilder: (context, index) {
+                      final patient = state.patients[index];
+
+                      return ListTile(title: Text(patient.name));
+                    },
+                  );
+                }
+
+                return const Center(child: Text("Search Patients"));
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -10,4 +10,6 @@ class PatientLoaded extends PatientState {
   PatientLoaded(this.patients);
 }
 
+class PatientEmpty extends PatientState {}
+
 class PatientError extends PatientState {}

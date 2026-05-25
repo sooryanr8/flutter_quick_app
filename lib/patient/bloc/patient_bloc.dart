@@ -9,14 +9,24 @@ class PatientBloc extends Cubit<PatientState> {
   PatientBloc(this.repository) : super(PatientLoading());
 
   Future<void> load({String search = ""}) async {
-    emit(PatientLoading());
-
     try {
       final result = await repository.getPatients(search: search);
 
+      if (result.isEmpty) {
+        emit(PatientEmpty());
+
+        return;
+      }
+
       emit(PatientLoaded(result));
-    } catch (_) {
+    } catch (e) {
+      print(e);
+
       emit(PatientError());
     }
+  }
+
+  Future<void> search(String query) async {
+    await load(search: query);
   }
 }

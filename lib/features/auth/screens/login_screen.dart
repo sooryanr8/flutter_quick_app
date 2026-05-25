@@ -1,38 +1,123 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/api/api_client.dart';
 import '../bloc/auth_bloc.dart';
-import '../repository/auth_repository.dart';
+import '../../../patient/screens/patient_screen.dart';
 
-class LoginScreen extends StatelessWidget {
-  LoginScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
-  final bloc = AuthBloc(AuthRepository(ApiClient()));
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
-  final user = TextEditingController();
+class _LoginScreenState extends State<LoginScreen> {
+  final userController = TextEditingController();
+  final passController = TextEditingController();
 
-  final pass = TextEditingController();
+  bool loading = false;
+
+  @override
+  void dispose() {
+    userController.dispose();
+    passController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => bloc,
+    return BlocListener<AuthBloc, bool>(
+      listener: (context, state) {
+        print("AUTH STATE => $state");
+
+        setState(() {
+          loading = false;
+        });
+
+        if (state == true) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => PatientScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Login failed")));
+        }
+      },
+
       child: Scaffold(
-        body: Center(
-          child: Column(
-            children: [
-              TextField(controller: user),
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
 
-              TextField(controller: pass),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
 
-              ElevatedButton(
-                onPressed: () {
-                  bloc.login(user.text, pass.text);
-                },
-                child: const Text("Login"),
+                children: [
+                  const Text(
+                    "Patient App",
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  TextField(
+                    controller: userController,
+                    decoration: InputDecoration(
+                      labelText: "Username",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  TextField(
+                    controller: passController,
+                    obscureText: true,
+
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    width: double.infinity,
+
+                    height: 52,
+
+                    child: ElevatedButton(
+                      onPressed: loading
+                          ? null
+                          : () async {
+                              print("LOGIN BUTTON");
+
+                              setState(() {
+                                loading = true;
+                              });
+
+                              await context.read<AuthBloc>().login(
+                                userController.text.trim(),
+                                passController.text.trim(),
+                              );
+                            },
+
+                      child: loading
+                          ? const CircularProgressIndicator()
+                          : const Text("Login"),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
