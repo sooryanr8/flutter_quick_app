@@ -11,7 +11,7 @@ class PatientScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => PatientBloc(PatientRepository())..load(),
+      create: (_) => PatientBloc(PatientRepository()),
 
       child: const _PatientView(),
     );
@@ -23,10 +23,8 @@ class _PatientView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bloc = context.read<PatientBloc>();
-
     return Scaffold(
-      appBar: AppBar(title: const Text("Patient App")),
+      appBar: AppBar(title: const Text('Patient App')),
 
       body: Column(
         children: [
@@ -35,12 +33,11 @@ class _PatientView extends StatelessWidget {
 
             child: TextField(
               onChanged: (value) {
-                bloc.search(value);
+                context.read<PatientBloc>().search(value);
               },
 
               decoration: const InputDecoration(
-                hintText: "Search patient...",
-
+                hintText: 'Search patient...',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -49,31 +46,25 @@ class _PatientView extends StatelessWidget {
           Expanded(
             child: BlocBuilder<PatientBloc, PatientState>(
               builder: (context, state) {
-                print(state.runtimeType);
-
-                if (state is PatientLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                if (state is PatientInitial) {
+                  return const Center(child: Text('Search patient'));
                 }
 
                 if (state is PatientLoaded) {
-                  if (state.patients.isEmpty) {
-                    return const Center(
-                      child: Text("There are no patients to show"),
-                    );
-                  }
-
                   return ListView.builder(
                     itemCount: state.patients.length,
 
                     itemBuilder: (context, index) {
-                      final patient = state.patients[index];
-
-                      return ListTile(title: Text(patient.name));
+                      return ListTile(title: Text(state.patients[index].name));
                     },
                   );
                 }
 
-                return const Center(child: Text("Search Patients"));
+                if (state is PatientEmpty) {
+                  return const Center(child: Text('No patients found'));
+                }
+
+                return const Center(child: Text('Error'));
               },
             ),
           ),

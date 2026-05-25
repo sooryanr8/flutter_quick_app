@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import 'core/logger/logger_helper.dart';
 import 'features/auth/bloc/auth_bloc.dart';
 import 'features/auth/repository/auth_repository.dart';
 
@@ -11,6 +12,7 @@ import 'features/auth/screens/splash_screen.dart';
 
 Future<void> startApp() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LoggerHelper.initialize();
 
   // await Firebase.initializeApp();
 

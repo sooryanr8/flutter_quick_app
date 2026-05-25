@@ -2,39 +2,38 @@ import 'dart:convert';
 
 import 'package:http/http.dart';
 
+import '../../../core/config/api_constants.dart';
+import '../../../core/logger/logger_helper.dart';
 import '../models/patient_model.dart';
 
 class PatientRepository {
-  final client = Client();
+  final Client client = Client();
 
   Future<List<PatientModel>> getPatients({String search = ""}) async {
     try {
-      final response = await client.get(
-        Uri.parse("http://192.168.1.33:8000/patients"),
-      );
+      logInfo('Fetching patients | search=$search');
 
-      print(response.statusCode);
-      print(response.body);
+      final response = await client.get(Uri.parse(ApiConstants.searchPatients));
+
+      logInfo('API STATUS -> ${response.statusCode}');
+
+      logDebug(response.body);
 
       if (response.statusCode != 200) {
-        return [];
+        throw Exception("Failed to load patients");
       }
 
-      final data = jsonDecode(response.body);
+      final List<dynamic> data = jsonDecode(response.body);
 
-      final patients = (data as List)
+      final patients = data
           .map((e) => PatientModel.fromJson(e))
+          .where((p) => p.name.toLowerCase().contains(search.toLowerCase()))
           .toList();
+      logInfo('Parsed patients -> ${patients.length}');
 
-      if (search.isEmpty) {
-        return patients;
-      }
-
-      return patients.where((patient) {
-        return patient.name.toLowerCase().contains(search.toLowerCase());
-      }).toList();
-    } catch (e) {
-      print(e);
+      return patients;
+    } catch (e, s) {
+      logError('PatientRepository error', error: e, stackTrace: s);
 
       return [];
     }

@@ -1,16 +1,25 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/logger/logger_helper.dart';
 import '../repository/patient_repository.dart';
 import 'patient_state.dart';
 
 class PatientBloc extends Cubit<PatientState> {
   final PatientRepository repository;
 
-  PatientBloc(this.repository) : super(PatientLoading());
+  PatientBloc(this.repository) : super(PatientInitial());
 
-  Future<void> load({String search = ""}) async {
+  Future<void> search(String query) async {
     try {
-      final result = await repository.getPatients(search: search);
+      logInfo('Patient search → $query');
+
+      if (query.trim().isEmpty) {
+        emit(PatientInitial());
+
+        return;
+      }
+
+      final result = await repository.getPatients(search: query);
 
       if (result.isEmpty) {
         emit(PatientEmpty());
@@ -19,14 +28,10 @@ class PatientBloc extends Cubit<PatientState> {
       }
 
       emit(PatientLoaded(result));
-    } catch (e) {
-      print(e);
+    } catch (e, s) {
+      logError('Patient search failed', error: e, stackTrace: s);
 
       emit(PatientError());
     }
-  }
-
-  Future<void> search(String query) async {
-    await load(search: query);
   }
 }

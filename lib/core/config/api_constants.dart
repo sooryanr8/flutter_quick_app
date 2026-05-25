@@ -15,5 +15,5 @@ class ApiConstants {
 
   // API
   static String get searchPatients =>
-      "${AppConfig.apiBaseUrl}/provider-bff/patient/search";
+      "${AppConfig.apiBaseUrl}/patients";
 }

@@ -2,7 +2,7 @@ import '../models/patient_model.dart';
 
 abstract class PatientState {}
 
-class PatientLoading extends PatientState {}
+class PatientInitial extends PatientState {}
 
 class PatientLoaded extends PatientState {
   final List<PatientModel> patients;
